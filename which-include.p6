@@ -22,20 +22,21 @@ my @custom_include_dirs = grep { .starts-with('-I') }, @*ARGS;
 for (@custom_include_dirs) { $_ = .substr(2) }
 
 # Find specified include file
-my @include_dirs = flat @default_include_dirs, @custom_include_dirs;
+if %*ENV{'HEADER'}:exists {
+    my @include_dirs = flat @default_include_dirs, @custom_include_dirs;
+    my $found = False;
 
-for (@include_dirs) {
-    my $header = $_ ~ '/' ~ %*ENV{'HEADER'};
-    if $header.IO.e {
-        put $header;
-        exit 0;
+    for (@include_dirs) {
+        my $header = $_ ~ '/' ~ %*ENV{'HEADER'};
+        if $header.IO.e {
+            put $header;
+            $found = True;
+            last;
+        }
     }
+
+    put 'header not found' if not $found;
 }
 
-put 'header not found';
-
-CATCH {
-    put 'gcc present, but execute failed:';
-    $*ERR.say: .message;
-    exit 1;
-}
+# Actually execute gcc
+run 'gcc', @*ARGS;
