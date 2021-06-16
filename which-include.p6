@@ -25,17 +25,11 @@ for (@custom_include_dirs) { $_ = .substr(2) }
 if %*ENV{'HEADER'}:exists {
     my @include_dirs = flat @default_include_dirs, @custom_include_dirs;
     my $found = False;
+    my @include_files = @include_dirs.map({ $_ ~ '/' ~ %*ENV{'HEADER'} })
+                                     .grep({ .IO.e });
 
-    for (@include_dirs) {
-        my $header = $_ ~ '/' ~ %*ENV{'HEADER'};
-        if $header.IO.e {
-            put $header;
-            $found = True;
-            last;
-        }
-    }
-
-    put 'header not found' if not $found;
+    for (@include_files) { .put }
+    put 'header not found' if @include_files.elems == 0;
 }
 
 # Actually execute gcc
