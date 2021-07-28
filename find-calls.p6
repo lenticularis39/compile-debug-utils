@@ -16,7 +16,10 @@ sub find(IO::Path $root, Junction :$extension) {
     }
 }
 
-sub MAIN(Str $called-function, Str :$root = '.', Str :$arguments = '') {
+sub MAIN(Str $called-function,
+         Str :$root = '.',
+         Str :$arguments = '',
+         Bool :$n = False) {
     die "$root: not a directory" unless $root.IO.d;
 
     # Filter for function call
@@ -27,7 +30,9 @@ sub MAIN(Str $called-function, Str :$root = '.', Str :$arguments = '') {
     for find($root.IO, extension => 'c' | 'h') -> $file {
         my @matches = $file.slurp.match(/"$called-function" <whitespace> <bracketed-expr>/, :exhaustive);
         for @matches -> $match {
-            put $file.Str ~ ": " ~ $match if $arguments eq '' or $match<bracketed-expr> eq "($arguments)";
+            my $id = $file.Str;
+            $id ~= ' (' ~ Int($match.target.substr(0, $match.from).lines) ~ ')' if $n;
+            put $id ~ ": " ~ $match if $arguments eq '' or $match<bracketed-expr> eq "($arguments)";
         }
     }
 }
